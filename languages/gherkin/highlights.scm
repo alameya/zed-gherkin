@@ -16,7 +16,15 @@
   (examples_kw)
 ] @keyword
 
-; Step keywords
+; Colons after section keywords
+(feature_line ":" @punctuation.delimiter)
+(rule_line ":" @punctuation.delimiter)
+(background_line ":" @punctuation.delimiter)
+(scenario_line ":" @punctuation.delimiter)
+(scenario_outline_line ":" @punctuation.delimiter)
+(examples_line ":" @punctuation.delimiter)
+
+; Step keywords (including the `*` shorthand)
 [
   (given_kw)
   (when_kw)
@@ -24,6 +32,7 @@
   (and_kw)
   (but_kw)
 ] @keyword.function
+(asterisk_line "* " @keyword.function)
 
 ; Titles of features, rules, scenarios and example blocks
 (feature_line (context) @type)
@@ -33,6 +42,9 @@
 (background_line (context) @type)
 (examples_line (context) @type)
 
+; Prose descriptions of features/rules/scenarios/examples
+(description) @comment.doc
+
 ; Tags: @wip
 (tag) @tag
 
@@ -40,8 +52,9 @@
 (step_param) @variable.parameter
 
 ; Doc strings (""" ... """ / ``` ... ```)
-(doc_string_content) @string
+(doc_string ["\"\"\"" "```"] @string.special)
 (doc_string (media_type) @label)
+(doc_string_content) @string
 
 ; Data tables
 (table_head_row (table_col (table_cell) @variable.parameter))
