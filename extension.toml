@@ -1,0 +1,15 @@
+id = "gherkin"
+name = "Gherkin"
+description = "BDD Gherkin (.feature) support: rich syntax highlighting, outline and folds, plus cucumber-language-server LSP"
+version = "0.1.0"
+schema_version = 1
+authors = ["Raul"]
+repository = "https://github.com/raul/zed-gherkin"
+
+[language_servers.cucumber-language-server]
+languages = ["Gherkin"]
+code_action_kinds = ["quickfix"]
+
+[grammars.gherkin]
+repository = "https://github.com/binhtddev/tree-sitter-gherkin"
+commit = "1a709aebeecbe81bd70dfd6ea784894844be1511"

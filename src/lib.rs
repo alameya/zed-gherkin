@@ -1,0 +1,153 @@
+use std::{env, fs};
+
+use zed::settings::LspSettings;
+use zed_extension_api::{self as zed};
+
+const LANGUAGE_SERVER_ID: &str = "cucumber-language-server";
+const PACKAGE_NAME: &str = "@cucumber/language-server";
+const SERVER_SCRIPT_PATH: &str =
+    "node_modules/@cucumber/language-server/bin/cucumber-language-server.cjs";
+
+struct GherkinExtension {
+    did_find_server: bool,
+}
+
+impl GherkinExtension {
+    fn server_exists(&self) -> bool {
+        fs::metadata(SERVER_SCRIPT_PATH).map_or(false, |stat| stat.is_file())
+    }
+
+    fn server_script_path(&mut self, id: &zed::LanguageServerId) -> zed::Result<String> {
+        let server_exists = self.server_exists();
+        if self.did_find_server && server_exists {
+            return Ok(SERVER_SCRIPT_PATH.to_string());
+        }
+
+        zed::set_language_server_installation_status(
+            id,
+            &zed::LanguageServerInstallationStatus::CheckingForUpdate,
+        );
+        let version = zed::npm_package_latest_version(PACKAGE_NAME)?;
+
+        if !server_exists
+            || zed::npm_package_installed_version(PACKAGE_NAME)?.as_ref() != Some(&version)
+        {
+            zed::set_language_server_installation_status(
+                id,
+                &zed::LanguageServerInstallationStatus::Downloading,
+            );
+            match zed::npm_install_package(PACKAGE_NAME, &version) {
+                Ok(()) => {
+                    if !self.server_exists() {
+                        Err(format!(
+                            "installed package '{PACKAGE_NAME}' did not contain expected path '{SERVER_SCRIPT_PATH}'"
+                        ))?;
+                    }
+                }
+                Err(error) => {
+                    if !self.server_exists() {
+                        Err(error)?;
+                    }
+                }
+            }
+        }
+
+        self.did_find_server = true;
+        Ok(SERVER_SCRIPT_PATH.to_string())
+    }
+
+    fn server_command(
+        &mut self,
+        language_server_id: &zed::LanguageServerId,
+        worktree: &zed::Worktree,
+    ) -> zed::Result<zed::Command> {
+        let lsp_settings = LspSettings::for_worktree(LANGUAGE_SERVER_ID, worktree).ok();
+
+        // 1. Binary explicitly configured in settings
+        //    (`lsp.cucumber-language-server.binary.path`).
+        if let Some(binary) = lsp_settings.as_ref().and_then(|s| s.binary.as_ref()) {
+            if let Some(path) = binary.path.clone() {
+                return Ok(zed::Command {
+                    command: path,
+                    args: binary
+                        .arguments
+                        .clone()
+                        .unwrap_or_else(|| vec!["--stdio".into()]),
+                    env: Default::default(),
+                });
+            }
+        }
+
+        // 2. `cucumber-language-server` found on the worktree's PATH.
+        if let Some(command) = worktree.which("cucumber-language-server") {
+            return Ok(zed::Command {
+                command,
+                args: vec!["--stdio".into()],
+                env: Default::default(),
+            });
+        }
+
+        // 3. Auto-install the npm package and run it with Zed's bundled Node.
+        let script_path = self.server_script_path(language_server_id)?;
+        Ok(zed::Command {
+            command: zed::node_binary_path()?,
+            args: vec![
+                env::current_dir()
+                    .unwrap()
+                    .join(&script_path)
+                    .to_string_lossy()
+                    .to_string(),
+                "--stdio".into(),
+            ],
+            env: Default::default(),
+        })
+    }
+}
+
+impl zed::Extension for GherkinExtension {
+    fn new() -> Self {
+        Self {
+            did_find_server: false,
+        }
+    }
+
+    fn language_server_command(
+        &mut self,
+        language_server_id: &zed::LanguageServerId,
+        worktree: &zed::Worktree,
+    ) -> zed::Result<zed::Command> {
+        self.server_command(language_server_id, worktree)
+    }
+
+    fn language_server_initialization_options(
+        &mut self,
+        _language_server_id: &zed::LanguageServerId,
+        worktree: &zed::Worktree,
+    ) -> zed::Result<Option<zed::serde_json::Value>> {
+        let initialization_options = LspSettings::for_worktree(LANGUAGE_SERVER_ID, worktree)
+            .ok()
+            .and_then(|settings| settings.initialization_options.clone());
+        Ok(initialization_options)
+    }
+
+    fn language_server_workspace_configuration(
+        &mut self,
+        _language_server_id: &zed::LanguageServerId,
+        worktree: &zed::Worktree,
+    ) -> zed::Result<Option<zed::serde_json::Value>> {
+        let settings = LspSettings::for_worktree(LANGUAGE_SERVER_ID, worktree)
+            .ok()
+            .and_then(|lsp_settings| lsp_settings.settings.clone())
+            .unwrap_or_else(|| {
+                zed::serde_json::json!({
+                    "cucumber": {
+                        "features": ["features/**/*.feature"],
+                        "glue": []
+                    }
+                })
+            });
+        Ok(Some(settings))
+    }
+}
+
+zed::register_extension!(GherkinExtension);
