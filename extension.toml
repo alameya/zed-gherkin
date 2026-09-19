@@ -6,9 +6,8 @@ schema_version = 1
 authors = ["Raul"]
 repository = "https://github.com/raul/zed-gherkin"
 
-[language_servers.cucumber-language-server]
+[language_servers.gherkin-lsp]
 languages = ["Gherkin"]
-code_action_kinds = ["quickfix"]
 
 [grammars.gherkin]
 repository = "https://github.com/binhtddev/tree-sitter-gherkin"
