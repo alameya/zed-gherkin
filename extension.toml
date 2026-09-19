@@ -4,7 +4,7 @@ description = "BDD Gherkin (.feature) support: syntax highlighting, outline, fol
 version = "0.1.0"
 schema_version = 1
 authors = ["Raul"]
-repository = "https://github.com/raul/zed-gherkin"
+repository = "https://github.com/alameya/zed-gherkin"
 
 [language_servers.gherkin-lsp]
 languages = ["Gherkin"]
