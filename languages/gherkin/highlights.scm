@@ -51,6 +51,9 @@
 ; Step parameters: <placeholder>
 (step_param) @variable.parameter
 
+; Optional: color the whole step text (VS Code keeps it plain — uncomment to enable)
+; (step_context) @string
+
 ; Doc strings (""" ... """ / ``` ... ```)
 (doc_string ["\"\"\"" "```"] @string.special)
 (doc_string (media_type) @label)
