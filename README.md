@@ -1,6 +1,7 @@
-# zed-gherkin
+# gherkin (zed extension)
 
-Zed extension for BDD Gherkin (`.feature`) files.
+Zed extension for BDD Gherkin (`.feature`) files. Published as **`gherkin`** in the
+Zed extension registry (id `gherkin`, LSP id `gherkin-lsp`).
 
 ## Features
 
@@ -13,8 +14,15 @@ Zed extension for BDD Gherkin (`.feature`) files.
 - Code folding for blocks, doc strings and data tables
 - Auto-indent inside features, rules, scenarios and examples
 - Language injection into typed doc strings (`"""xml … """` highlights as XML)
-- LSP via [`@cucumber/language-server`](https://www.npmjs.com/package/@cucumber/language-server):
-  syntax error checking, step autocompletion, formatting, quickfixes
+- Built-in LSP **gherkin-lsp** (zero-dependency Node server, bundled with the
+  extension — no npm install):
+  - `Undefined step` diagnostics against behave (`@given/@when/@then/@step`) glue
+  - step autocompletion from step definitions
+  - go-to-definition: step → `.py` glue file/line
+  - document outline (features/rules/scenarios) and table formatting
+  - resolves all paths from the LSP `rootUri` (no cwd dependency)
+  - accepts `@Given` in any case, `r"…"`/`'…'`/`f"…"` strings, `parse(...)` is not
+    yet supported
 
 ## Install (dev)
 
@@ -25,42 +33,39 @@ zed .
 
 Then in Zed: `Extensions` → `Install Dev Extension` → select this folder.
 
-The language server is installed automatically (npm) and run with Zed's bundled
-Node.js. No manual setup required.
+The language server ships inside the extension and runs on Zed's bundled
+Node.js. Nothing to install.
 
 ## LSP configuration
 
-Defaults are enough for pure Gherkin editing (syntax errors, formatting). To get
-step autocompletion from your step definitions, point the server at your glue:
+Defaults cover common layouts (`features/`, `openspec/`, `tests/bdd/steps`).
+To point the server at your own feature files and behave glue:
 
 ```json
 // ~/AppData/.../settings.json or ~/.config/zed/settings.json
 {
   "lsp": {
-    "cucumber-language-server": {
+    "gherkin-lsp": {
       "settings": {
-        "cucumber": {
-          "features": ["features/**/*.feature"],
-          "glue": ["features/step_definitions/**/*.ts"]
-        }
+        "features": ["openspec/**/features/**/*.feature"],
+        "glue": ["tests/bdd/steps/*.py"]
       }
     }
   }
 }
 ```
 
-The `cucumber` section is passed straight to the language server, so any
-[cucumber-language-server setting](https://github.com/cucumber/language-server#settings)
-works (e.g. `parameterTypes`, `snippets`).
+The `gherkin` section is passed straight to the language server. Glue supports
+any `@given/@when/@then/@step` regular expressions (behave `use_step_matcher("re")`).
 
 To use a specific binary instead of the auto-installed one:
 
 ```json
 {
   "lsp": {
-    "cucumber-language-server": {
+    "gherkin-lsp": {
       "binary": {
-        "path": "/usr/bin/cucumber-language-server",
+        "path": "/path/to/custom/gherkin-lsp",
         "arguments": ["--stdio"]
       }
     }

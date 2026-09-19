@@ -1,6 +1,6 @@
 id = "gherkin"
 name = "Gherkin"
-description = "BDD Gherkin (.feature) support: rich syntax highlighting, outline and folds, plus cucumber-language-server LSP"
+description = "BDD Gherkin (.feature) support: syntax highlighting, outline, folds, language injection, plus a built-in BDD language server (undefined-step diagnostics, completion and go-to-definition for behave step definitions)"
 version = "0.1.0"
 schema_version = 1
 authors = ["Raul"]
