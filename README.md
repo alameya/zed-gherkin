@@ -73,6 +73,16 @@ To use a specific binary instead of the auto-installed one:
 }
 ```
 
+## Credits
+
+- Syntax grammar: [binhtddev/tree-sitter-gherkin](https://github.com/binhtddev/tree-sitter-gherkin)
+  by Binh Tran (MIT) — a maintained port of the original
+  `cucumber/tree-sitter-gherkin` by Cucumber Ltd. Pinned as a dependency;
+  no grammar code is bundled in this repository.
+- The bundled `gherkin-lsp` and all tree-sitter queries were written for this
+  extension. The npm-install bootstrap of early versions referenced
+  [thlcodes/zed-extension-cucumber](https://github.com/thlcodes/zed-extension-cucumber).
+
 ## License
 
 MIT
