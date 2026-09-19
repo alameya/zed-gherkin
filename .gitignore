@@ -2,3 +2,4 @@
 node_modules/
 *.wasm
 Cargo.lock
+grammars/
